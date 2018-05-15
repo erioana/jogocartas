@@ -1,13 +1,16 @@
 package br.com.jogocartas.apresentacao;
 
 import java.awt.Component;
+
 import java.awt.EventQueue;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
-import br.com.jogocartas.comunicacao.Solicitacao;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import br.com.jogocartas.comunicacao.Transmissao;
 
 import javax.swing.JTextField;
@@ -95,26 +98,36 @@ public class JLoginFrame extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				String email = txt_email.getText();
 				String pass = new String(txt_senha.getPassword());
-
-				Solicitacao solicitacao = new Solicitacao("LOG",email, pass);
-				Transmissao transmitor = new Transmissao(solicitacao);
 				
-				if (transmitor.enviaSolicitacao().equals("LOG-SUC")) {
-					JOptionPane.showMessageDialog(frame,
-							"Logado com sucesso!");
-				} else {
-					JOptionPane.showMessageDialog(frame,
-							"E-mail ou senha inválido, por favor tente novamente!");
+				try {
+					
+					JSONObject jsonObject = new JSONObject();	
+					jsonObject.put("protocolo", "LOG");
+					jsonObject.put("email", email);
+					jsonObject.put("senha", pass);
+
+					Transmissao transmitor = new Transmissao(jsonObject);
+
+					if (transmitor.enviaSolicitacao().getString("protocolo").equals("LOG-SUCC")){ // validando se o protocolo enviado pelo servidor eh SUCC-LOG
+						JDesktopPanelPrincipal jPanelPrincipal = new JDesktopPanelPrincipal();
+						dispose();
+						jPanelPrincipal.setLocationRelativeTo(null);
+						jPanelPrincipal.setVisible(true);
+					}else{
+						JOptionPane.showMessageDialog(frame, "E-mail ou senha inválido, por favor tente novamente!");
+					}
+				} catch (JSONException e1) {
+					e1.printStackTrace();
 				}
 			}
 		});
-		
+
 
 		JButton btnCancelar = new JButton("Cancelar");
 		btnCancelar.setFont(new Font("Segoe UI Semibold", Font.BOLD, 18));
 		btnCancelar.setBounds(174, 154, 140, 40);
 		contentPane.add(btnCancelar);
-		
+
 		/**
 		 * 
 		 * Esse metodo eh responsavel por limpar os campos
@@ -133,7 +146,7 @@ public class JLoginFrame extends JFrame {
 		btnCadastro.setFont(new Font("Segoe UI Semibold", Font.BOLD, 18));
 		btnCadastro.setBounds(326, 154, 140, 40);
 		contentPane.add(btnCadastro);
-		
+
 		/**
 		 * 
 		 * Esse metodo eh responsavel por abrir a tela de cadastro
@@ -149,7 +162,7 @@ public class JLoginFrame extends JFrame {
 
 			}
 		});
-		
+
 
 		txt_senha = new JPasswordField();
 		txt_senha.setFont(new Font("Segoe UI Semibold", Font.BOLD, 18));

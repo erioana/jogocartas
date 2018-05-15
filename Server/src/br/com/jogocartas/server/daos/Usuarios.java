@@ -1,5 +1,7 @@
 package br.com.jogocartas.server.daos;
 
+import org.json.JSONObject;
+
 import br.com.jogocartas.server.bd.BD;
 import br.com.jogocartas.server.core.MeuResultSet;
 import br.com.jogocartas.server.dbos.Usuario;
@@ -41,19 +43,21 @@ public class Usuarios {
 	 * 
 	 * Esse metodo eh responsavel por cadastrar um novo usuario no sistema
 	 * 
-	 * @param usuario: Usuario a ser cadastrado
+	 * @param jsonUsuario: Usuario a ser cadastrado
+	 * 
 	 * 
 	 * */
-	public void incluir(Usuario usuario) throws Exception {
-		if(usuario == null)
+	public void incluir(JSONObject jsonUsuario) throws Exception {
+		if(jsonUsuario == null)
 			throw new Exception("Usuario não fornecido");
 		
 		String sql;
-		sql = "INSERT INTO USUARIOS(EMAIL,NOME,SENHA)VALUES(?,?,?)";
+		sql = "INSERT INTO USUARIOS(EMAIL,NOME,SENHA,QTDMOEDAS)VALUES(?,?,?,?)";
 		BD.COMANDO.prepareStatement(sql);
-		BD.COMANDO.setString(1, usuario.getEmail());
-		BD.COMANDO.setString(2, usuario.getNome());
-		BD.COMANDO.setString(3, usuario.getSenha());
+		BD.COMANDO.setString(1, jsonUsuario.getString("email").toString());
+		BD.COMANDO.setString(2, jsonUsuario.getString("nome").toString());
+		BD.COMANDO.setString(3, jsonUsuario.getString("senha").toString());
+		BD.COMANDO.setInt(4,  jsonUsuario.getInt("qtdmoedas"));
 		
 		BD.COMANDO.executeUpdate();
 		BD.COMANDO.commit();

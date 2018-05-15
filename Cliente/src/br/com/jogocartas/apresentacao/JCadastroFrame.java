@@ -1,6 +1,7 @@
 package br.com.jogocartas.apresentacao;
 
 import java.awt.Component;
+
 import java.awt.EventQueue;
 import java.awt.Font;
 
@@ -12,7 +13,9 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 
-import br.com.jogocartas.comunicacao.Solicitacao;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import br.com.jogocartas.comunicacao.Transmissao;
 
 import javax.swing.JPasswordField;
@@ -88,6 +91,8 @@ public class JCadastroFrame extends JFrame {
 		/**
 		 * Esse metodo eh responsavel por efetuar o cadastro 
 		 * do usuario no sistema
+		 * 
+		 * @rule: todo usuario cadastrado no sistema inicia-se com 1000 moedas
 		 * */	
 		btnCadastrar.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -107,20 +112,32 @@ public class JCadastroFrame extends JFrame {
 				} else if (!validar(email)) {
 					JOptionPane.showMessageDialog(frame, "E-mail inválido!");
 				} else {
-
-					Solicitacao solicitacao = new Solicitacao("CAD", email, nome, senha);
-					Transmissao transmitor = new Transmissao(solicitacao);
-
-					if (transmitor.enviaSolicitacao().equals("CAD-SUC")) {
-						JOptionPane.showMessageDialog(frame,
-								"Cadastrado com sucesso! \n Agora basta fazer o seu login utilizando os mesmos dados");
-						JLoginFrame form_login = new JLoginFrame();
-						form_login.setLocationRelativeTo(null);
-						form_login.setVisible(true);
-
-						dispose();
-					} else {
-						JOptionPane.showMessageDialog(frame, "Erro ao cadastrar, tente novamente!");
+					
+					JSONObject jsonObject = new JSONObject();
+					try {
+						
+						jsonObject.put("protocolo", "CAD");
+						jsonObject.put("nome", nome);
+						jsonObject.put("email", email);
+						jsonObject.put("senha", senha);
+						jsonObject.put("confirmacao", confirmacao);
+						jsonObject.put("qtdmoedas", 1000); // todo novo usuario cadastrado no sistema inicia-se com 1000 moedas
+						
+						Transmissao transmitor = new Transmissao(jsonObject);
+						
+						if (transmitor.enviaSolicitacao().getString("protocolo").equals("CAD-SUCC")) { // validando se o protocolo enviado pelo servidor eh SUCC-LOG
+							JOptionPane.showMessageDialog(frame, "Usuário cadastrado com sucesso!");
+							JLoginFrame form_login = new JLoginFrame();
+							form_login.setLocationRelativeTo(null);
+							form_login.setVisible(true);
+							dispose();
+						}else {
+							
+							JOptionPane.showMessageDialog(frame, "Erro ao cadastrar, tente novamente!");
+						}
+						
+					} catch (JSONException e1) {
+						e1.printStackTrace();
 					}
 				}
 			}

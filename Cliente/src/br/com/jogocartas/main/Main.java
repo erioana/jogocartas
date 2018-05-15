@@ -1,4 +1,5 @@
 package br.com.jogocartas.main;
+
 import br.com.jogocartas.apresentacao.JLoginFrame;
 
 /**

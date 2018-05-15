@@ -1,9 +1,10 @@
 package br.com.jogocartas.server.dbos;
 
+import java.io.Serializable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class Usuario {
+public class Usuario implements Serializable {
 
 	private String email;
 	private String nome;
@@ -13,9 +14,7 @@ public class Usuario {
 		if(validar(email))
 			this.email = email;
 		else
-			throw new Exception("E-mail inválido!");
-		
-			
+			throw new Exception("E-mail inválido!");		
 	}
 
 	public void setNome(String nome) throws Exception {
@@ -43,7 +42,7 @@ public class Usuario {
 		this.setNome(nome);
 		this.setSenha(senha);
 	}
-	
+
 	public boolean validar(String email) {
 		boolean isEmailValid = false;
 		if(email != null && email.length() > 0) {

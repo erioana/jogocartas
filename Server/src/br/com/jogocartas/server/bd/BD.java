@@ -1,6 +1,7 @@
 package br.com.jogocartas.server.bd;
 
 import br.com.jogocartas.server.core.MeuPreparedStatement;
+import br.com.jogocartas.server.daos.PartidasUsuarios;
 import br.com.jogocartas.server.daos.Usuarios;
 
 /**
@@ -14,17 +15,19 @@ import br.com.jogocartas.server.daos.Usuarios;
 public class BD {
 	public static final MeuPreparedStatement COMANDO;
 	public static final Usuarios USUARIOS;
+	public static final PartidasUsuarios PARTIDAS_USUARIOS;
 
 	static {
 		MeuPreparedStatement comando = null;
 		Usuarios usuarios = null;
+		PartidasUsuarios partidasUsuarios = null;
 
 		try {
 				// mysql connection
 	    		comando =
 	            new MeuPreparedStatement (
 	            "com.mysql.jdbc.Driver",
-	            "jdbc:mysql://127.0.0.1:3306/login",
+	            "jdbc:mysql://127.0.0.1:3306/jogocartas",
 	            "root", "root");
 	            
 	            //sql connection
@@ -44,5 +47,6 @@ public class BD {
 
 		COMANDO = comando;
 		USUARIOS = usuarios;
+		PARTIDAS_USUARIOS = partidasUsuarios;
 	}
 }

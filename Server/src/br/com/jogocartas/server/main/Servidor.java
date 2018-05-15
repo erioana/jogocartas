@@ -1,10 +1,10 @@
 package br.com.jogocartas.server.main;
 import java.io.*;
-import java.text.*;
-import java.util.*;
+
 import java.net.*;
 
-import org.omg.CORBA.DataInputStream;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import br.com.jogocartas.server.bd.BD;
 import br.com.jogocartas.server.dbos.Usuario;
@@ -14,7 +14,7 @@ import br.com.jogocartas.server.dbos.Usuario;
  *
  * @author Andre Ribeiro, Gabriel Augusto, Vitor Malandrin
  * 
- * @version 1.0.0
+ * @version 2.0.0
  * 
  * */
 public class Servidor extends Thread {
@@ -37,67 +37,121 @@ public class Servidor extends Thread {
 	 *  O mesmo para o login.
 	 */
 	public void run() {
-		String receber;
+		JSONObject jsonRecebido;
 
 		while (true) {
+			
 			try {
-				receber = String.valueOf(entrada.readObject());
-				String user_data[] = new String[4];
-				user_data = receber.split("/");
-
-				if (user_data[0].equals("CAD")) {
-							System.out.println("Nova Solicitação de Cadastro no servidor de:"+ user_data[1]);
-							try {
-								if (!BD.USUARIOS.isCadastrado(user_data[1])) {
-									Usuario usuario = new Usuario(user_data[1], user_data[2], user_data[3]);
-									BD.USUARIOS.incluir(usuario);
-									String msg = "SUC";
-									saida.writeObject(msg);
-									
-								}else {
-									// RETORNA ERR, JA ESTÁ CADASTRADO
-									
-									String msg = "ERR";
-									saida.writeObject(msg);
-								}
-		
-							} catch (Exception erro) {
-								System.err.println(erro);
-							}
-							this.socket.close();
-							break;
-				} else if (user_data[0].equals("LOG")) {
-					System.out.println("Nova Solicitação de Cadastro no servidor de:"+ user_data[1]);
-					if (BD.USUARIOS.isCadastrado(user_data[1])) {
-						Usuario user = BD.USUARIOS.getUsuario(user_data[1]);
-						if (user_data[2].equals(user.getSenha())) {
-							String msg = "SUC";
-							saida.writeObject(msg);
-						} else {
-							String msg = "ERR";
-							saida.writeObject(msg);
-						}
-					} else {
-						String msg = "ERR";
-						saida.writeObject(msg);
-					}
-					this.socket.close();
-					break;
+				 String receivedData = String.valueOf(entrada.readObject());
+				 jsonRecebido = new JSONObject(receivedData);
+				 
+				 /**
+				  * Implementar aqui todos os metodos que o sevidor deve chamar baseado em cada protocolo de comunicacao
+				  * enviado pelo cliente
+				  * 
+				  * e.g: caso o protocolo de comunicacao for LOG, então o servidor chamara o metodo que executa o login no sistema
+				  *      caso o protocolo de comunicacao for CAD, entao o servidor chamara o metodo que executa o cadastro de usuario no sistema
+				  *  
+				  * */
+				 switch(jsonRecebido.getString("protocolo").toString()){
+				 	case "LOG":
+				 		efetuarLogin(jsonRecebido);
+				 		break;
+				 	case "CAD":
+				 		 cadastrarUsuario(jsonRecebido);
+				 		break;	
+				 }
+				} catch (IOException e) {
+					e.printStackTrace();
+					e.printStackTrace();
+				} catch (ClassNotFoundException e) {
+					e.printStackTrace();
+				} catch (JSONException e) {
+					e.printStackTrace();
 				}
-			} catch (Exception e) {
-				System.err.println(e.getMessage());
-			}
 		}
-
-		try {
-			this.saida.close();
-
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
 	}
-
+	
+	
+	/**
+	 * Esse metodo eh responsavel por gerenciar o cadastramento de um usuario no banco de dados
+	 * 
+	 * Caso o cadastro do usuario for efetuado com sucesso, esse metodo emitira a mensagem SUC-CAD
+	 * para o servidor de saida
+	 * 
+	 * Caso o cadastro do usuario não for efetuado com sucesso, esse metodo emitira uma mensagem ERR-CAD
+	 * para o servidor de saida
+	 * 
+	 * @param jsonRecebido: objeto json contendo as informações do usuario para cadastramento no banco
+	 * 
+	 * @throws JSONException 
+	 * 
+	 * */
+	private void cadastrarUsuario(JSONObject jsonRecebido) throws JSONException{
+		
+		System.out.println("Cadastrar usuario: "+ jsonRecebido.getString("nome").toString());
+		
+		try {
+			if (!BD.USUARIOS.isCadastrado(jsonRecebido.getString("email").toString())) {
+				BD.USUARIOS.incluir(jsonRecebido);
+				JSONObject jsonResposta = new JSONObject();
+				jsonResposta.put("protocolo", "CAD-SUCC");
+				this.saida.writeObject(jsonResposta.toString());
+			}else {
+				JSONObject jsonResposta = new JSONObject();
+				jsonResposta.put("protocolo", "CAD-ERR");
+				this.saida.writeObject(jsonResposta.toString());
+			}
+		} catch (Exception erro) {
+			System.err.println(erro);
+		}
+	}
+	
+	
+	/**
+	 * Esse metodo eh responsavel por gerenciar o login do usuario no sistema
+	 * 
+	 * Caso o login for efetuado com sucesso, esse metodo emitira a mensagem SUC-LOG
+	 * para o servidor de saida
+	 * 
+	 * Caso o login não for efetuado com sucesso, esse metodo emitira uma mensagem ERR-LOG
+	 * para o servidor de saida
+	 * 
+	 * @param jsonRecebido: objeto json contendo as informações de login do usuario para validação pelo servidor
+	 * 
+	 * @throws JSONException 
+	 * 
+	 * */
+	private void efetuarLogin(JSONObject jsonRecebido) throws JSONException{
+		
+		System.out.println("Usuário " + jsonRecebido.getString("email").toString() + " efetuando login no sistema");
+		
+		try {
+				if (BD.USUARIOS.isCadastrado(jsonRecebido.getString("email").toString())) {
+					
+					//pega dados do usuario que esta logando
+					Usuario user = BD.USUARIOS.getUsuario(jsonRecebido.getString("email").toString());
+					
+					//verifica se a senha do usuario cadastrada no banco confere com a digitada
+					if (jsonRecebido.getString("senha").toString().equals(user.getSenha())) {
+						JSONObject jsonResposta = new JSONObject();
+						jsonResposta.put("protocolo", "LOG-SUCC");
+						this.saida.writeObject(jsonResposta.toString());
+					} else {
+						JSONObject jsonResposta = new JSONObject();
+						jsonResposta.put("protocolo", "LOG-ERR");
+						this.saida.writeObject(jsonResposta.toString());
+					}
+				} else {
+					JSONObject jsonResposta = new JSONObject();
+					jsonResposta.put("protocolo", "LOG-ERR");
+					this.saida.writeObject(jsonResposta.toString());
+				}
+			} catch (Exception erro) {
+					System.err.println(erro);
+				}
+	}
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;

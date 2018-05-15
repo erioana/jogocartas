@@ -10,7 +10,7 @@ SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='TRADITIONAL,ALLOW_INVALID_DATES';
 
 CREATE TABLE IF NOT EXISTS `jogocartas`.`usuarios` (
-  `id` INT(11) NOT NULL,
+  `id` INT(100) INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
   `nome` VARCHAR(100) NULL DEFAULT NULL,
   `email` VARCHAR(100) NULL DEFAULT NULL,
   `senha` VARCHAR(70) NULL DEFAULT NULL,
@@ -21,7 +21,7 @@ ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8;
 
 CREATE TABLE IF NOT EXISTS `jogocartas`.`partidas` (
-  `id` INT(11) NOT NULL,
+  `id` INT(100) INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
   `nomepartida` VARCHAR(100) NULL DEFAULT NULL,
   `valoraposta` VARCHAR(45) NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
@@ -30,8 +30,8 @@ ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8;
 
 CREATE TABLE IF NOT EXISTS `jogocartas`.`partidasusuarios` (
-  `usuarios_id` INT(11) NOT NULL,
-  `partidas_id` INT(11) NOT NULL,
+  `usuarios_id` INT(100) NOT NULL,
+  `partidas_id` INT(100) NOT NULL,
   INDEX `fk_table1_usuarios_idx` (`usuarios_id` ASC),
   INDEX `fk_partidasusuarios_partidas1_idx` (`partidas_id` ASC),
   CONSTRAINT `fk_table1_usuarios`
